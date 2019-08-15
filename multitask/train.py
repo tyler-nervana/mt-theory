@@ -9,11 +9,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset, Dataset, Subset
 from data import make_teacher_classification
-
-try:
-    from tensorboardX import SummaryWriter
-except ImportError:
-    raise RuntimeError("No tensorboardX package is found. Please install with the command: \npip install tensorboardX")
+from tensorboardX import SummaryWriter
 
 
 def create_summary_writer(model, data_loader, log_dir):
@@ -68,7 +64,6 @@ def train_models(model1, model2, optT, opt1, opt2, dl1, dl2, val_dl1, val_dl2, n
                 opt1.step()
                 count1 += 1
                 if store_gradients:
-                    #                import ipdb; ipdb.set_trace()
                     for nm, param in mlp1.named_parameters():
                         if nm not in grads:
                             grads[nm] = 0
@@ -116,8 +111,6 @@ def train_models(model1, model2, optT, opt1, opt2, dl1, dl2, val_dl1, val_dl2, n
         if multitask or single2:
             train2_losses.append(avg2_loss / count2)
 
-#        import ipdb; ipdb.set_trace()
-
         if not single2:
             avg_loss = 0
             correct = 0
@@ -128,7 +121,6 @@ def train_models(model1, model2, optT, opt1, opt2, dl1, dl2, val_dl1, val_dl2, n
                     out = model1(x)
                     loss = loss_fun1(out, y)
                     avg_loss += loss.item()
-                    #import ipdb; ipdb.set_trace()
                     correct += torch.eq(torch.max(out, dim=1)[1], y).sum().item() / len(y)
             test1_losses.append(avg_loss / (ii + 1))
             test1_acc.append(correct / (ii + 1))
@@ -161,7 +153,6 @@ def train_models(model1, model2, optT, opt1, opt2, dl1, dl2, val_dl1, val_dl2, n
                 tb_writer.add_scalar("validation-2/loss", test2_losses[-1], epoch)
                 tb_writer.add_scalar("validation-2/acc", test2_acc[-1], epoch)
             if store_gradients:
-#                import ipdb; ipdb.set_trace()
                 for nm, val in grads.items():
                     if nm.startswith("trunk"):
                         l = count1 + count2
@@ -174,19 +165,6 @@ def train_models(model1, model2, optT, opt1, opt2, dl1, dl2, val_dl1, val_dl2, n
                     tb_writer.add_scalar("grad-norm/{}".format(nm.replace(".", "-")),
                                          val / l,
                                          epoch)
-
-        if (k8s_writer is not None) and (epoch % 500 == 0):
-            results = {"train-1-loss": train1_losses[-1],
-                       "validation-1-loss": test1_losses[-1],
-                       "validation-1-acc": test1_acc[-1]}
-            if multitask:
-                results.update({"train-2-loss": train2_losses[-1],
-                                "validation-2-loss": test2_losses[-1],
-                                "validation-2-acc": test2_acc[-1]})
-            k8s_writer.write(results, epoch)
-
-    if k8s_writer is not None:
-        k8s_writer.close(final=True)
 
     return (train1_losses, test1_losses, test1_acc), (train2_losses, test2_losses, test2_acc)
 

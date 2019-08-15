@@ -45,20 +45,7 @@ def benefit_generalized(df1, df2, use_max=False):
     return pd.DataFrame(df).T.reorder_levels(df1.columns.names, axis=1)
 
 
-def get_args(directory, load=True, store=True):
-    df_fname = os.path.join(directory, "args.csv")
-    if load and os.path.isfile(df_fname):
-        df = pd.read_csv(df_fname, index_col=0)
-        return df
 
-    # Little weird to tie this to event files, but I think it's what I want.
-    event_files = get_event_files(directory)
-    args = pd.DataFrame({ef: torch.load(os.path.join(os.path.dirname(ef), "args.pt")) for ef in event_files}).T
-
-    if store:
-        args.to_csv(df_fname)
-    
-    return args
 
 
 def get_normalization_df(args, ntrain, value="validation-1/loss", **filters):

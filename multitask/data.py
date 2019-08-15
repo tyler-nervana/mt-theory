@@ -79,7 +79,6 @@ def make_teacher_classification(n_samples=100, n_features=20, rank=2,
     teacher1.W.data.copy_(torch.mm(scale1 * torch.tensor(s, dtype=torch.float), w1))
     teacher2.W.data.copy_(torch.mm(scale2 * torch.tensor(s, dtype=torch.float), new_w))
 
-#    import ipdb; ipdb.set_trace()
     # Get first dataset
     X1 = generator.randn(n_samples, n_features)
     y1 = np.zeros(n_samples, dtype=np.int)
